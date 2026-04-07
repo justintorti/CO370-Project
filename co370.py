@@ -1,6 +1,5 @@
 import gurobipy as gp
 from gurobipy import GRB
-import math
  
 # ---------------------------------------------------------------------------
 # 0.  Index sets
@@ -22,39 +21,26 @@ WEEKS   = [tuple(range(7 * k, 7 * k + 7)) for k in range(N_WEEKS)]
 # ---------------------------------------------------------------------------
  
 # Travel cost matrix C[i][j] in USD (symmetric, rough great-circle estimates)
-# Cities (same order as TEAMS): Montreal, Ottawa, Toronto, Boston, New York,
-#                                Minnesota, Seattle, Vancouver
-COORDS = {
-    0: (45.50, -73.57),   # Montreal
-    1: (45.42, -75.69),   # Ottawa
-    2: (43.65, -79.38),   # Toronto
-    3: (42.36, -71.06),   # Boston
-    4: (40.71, -74.01),   # New York
-    5: (44.98, -93.27),   # Minnesota
-    6: (47.61, -122.33),  # Seattle
-    7: (49.25, -123.12),  # Vancouver
+# Hard-coded values for the eight cities in the order:
+# Montreal, Ottawa, Toronto, Boston, New York, Minnesota, Seattle, Vancouver
+C = {
+    (0, 0): 0.00, (0, 1): 579.53, (0, 2): 1763.72, (0, 3): 1409.89,
+    (0, 4): 1868.36, (0, 5): 5388.80, (0, 6): 12858.62, (0, 7): 12904.37,
+    (1, 0): 579.53, (1, 1): 0.00, (1, 2): 1233.66, (1, 3): 1761.42,
+    (1, 4): 1894.14, (1, 5): 4814.42, (1, 6): 12330.86, (1, 7): 12390.80,
+    (2, 0): 1763.72, (2, 1): 1233.66, (2, 2): 0.00, (2, 3): 2419.44,
+    (2, 4): 1924.85, (2, 5): 3897.42, (2, 6): 11638.46, (2, 7): 11758.74,
+    (3, 0): 1409.89, (3, 1): 1761.42, (3, 2): 2419.44, (3, 3): 0.00,
+    (3, 4): 1072.70, (3, 5): 6314.30, (3, 6): 13999.15, (3, 7): 14086.98,
+    (4, 0): 1868.36, (4, 1): 1894.14, (4, 2): 1924.85, (4, 3): 1072.70,
+    (4, 4): 0.00, (4, 5): 5725.65, (4, 6): 13528.10, (4, 7): 13665.67,
+    (5, 0): 5388.80, (5, 1): 4814.42, (5, 2): 3897.42, (5, 3): 6314.30,
+    (5, 4): 5725.65, (5, 5): 0.00, (5, 6): 7834.31, (5, 7): 8023.02,
+    (6, 0): 12858.62, (6, 1): 12330.86, (6, 2): 11638.46, (6, 3): 13999.15,
+    (6, 4): 13528.10, (6, 5): 7834.31, (6, 6): 0.00, (6, 7): 670.06,
+    (7, 0): 12904.37, (7, 1): 12390.80, (7, 2): 11758.74, (7, 3): 14086.98,
+    (7, 4): 13665.67, (7, 5): 8023.02, (7, 6): 670.06, (7, 7): 0.00,
 }
- 
-def haversine_km(c1, c2):
-    """Great-circle distance in km."""
-    R = 6371
-    lat1, lon1 = math.radians(c1[0]), math.radians(c1[1])
-    lat2, lon2 = math.radians(c2[0]), math.radians(c2[1])
-    dlat = lat2 - lat1
-    dlon = lon2 - lon1
-    a = math.sin(dlat/2)**2 + math.cos(lat1)*math.cos(lat2)*math.sin(dlon/2)**2
-    return 2 * R * math.asin(math.sqrt(a))
- 
-COST_PER_KM = 3.50   # USD per km (charter flight estimate)
- 
-C = {}
-for i in TEAMS:
-    for j in TEAMS:
-        if i == j:
-            C[i, j] = 0.0
-        else:
-            km = haversine_km(COORDS[i], COORDS[j])
-            C[i, j] = round(km * COST_PER_KM, 2)
  
 # ---------------------------------------------------------------------------
 # 2.  Model
