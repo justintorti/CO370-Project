@@ -24,6 +24,21 @@ team_conference = {
 # Weekend multiplier (games on weekends generate more revenue)
 WEEKEND_MULTIPLIER = 1.5  # 50% more revenue on weekends
 
+# TV slot revenue
+TV_SLOT_REVENUE = 10000  # $10,000 per filled TV slot
+
+# Create mapping from team number to conference
+team_by_number = {
+    1: "East", 2: "East", 3: "East", 4: "East",
+    5: "East", 6: "East", 7: "West", 8: "West"
+}
+
+# Weekdays are Monday-Friday (d % 7 in {1,2,3,4,5}, not 0 or 6)
+WEEKDAYS = [d for d in DAYS if d % 7 not in [0, 6]]
+
+# Weekends are Saturday and Sunday (d % 7 in {0, 6})
+WEEKENDS = [d for d in DAYS if d % 7 in [0, 6]]
+
 # Define weeks (7 days each, last week 6 days)
 weeks = []
 for start in range(1, 91, 7):
@@ -48,16 +63,47 @@ y = model.addVars(
     name='y'
 )
 
-# Objective: maximize ticket revenue with weekend multiplier
+# tv_west[d] = 1 if West Coast TV slot is filled on weekday d
+tv_west = model.addVars(
+    WEEKDAYS,
+    vtype=GRB.BINARY,
+    name='tv_west'
+)
+
+# tv_east[d] = 1 if East Coast TV slot is filled on weekday d
+tv_east = model.addVars(
+    WEEKDAYS,
+    vtype=GRB.BINARY,
+    name='tv_east'
+)
+
+# tv_weekend[d, s] = 1 if weekend TV slot s is filled on day d (2 slots per day, any team can fill)
+tv_weekend = model.addVars(
+    [(d, s) for d in WEEKENDS for s in [1, 2]],
+    vtype=GRB.BINARY,
+    name='tv_weekend'
+)
+
+# Objective: maximize ticket revenue with weekend multiplier + TV slot revenue
 # Pre-compute multipliers for efficiency
 revenue_mult = {}
 for d in DAYS:
     revenue_mult[d] = WEEKEND_MULTIPLIER if (d % 7 == 6 or d % 7 == 0) else 1.0
 
-revenue_expr = gp.quicksum(
+ticket_revenue = gp.quicksum(
     ticket_values[i] * revenue_mult[d] * x[i, j, d]
     for i in TEAMS for j in TEAMS if i != j for d in DAYS
 )
+
+tv_revenue = gp.quicksum(
+    TV_SLOT_REVENUE * (tv_west[d] + tv_east[d])
+    for d in WEEKDAYS
+) + gp.quicksum(
+    TV_SLOT_REVENUE * tv_weekend[d, s]
+    for d in WEEKENDS for s in [1, 2]
+)
+
+revenue_expr = ticket_revenue + tv_revenue
 model.setObjective(revenue_expr, GRB.MAXIMIZE)
 
 # Constraints
@@ -132,6 +178,32 @@ for d in DAYS:
             name=f'max_games_day_{d}'
         )
 
+# TV slot constraints (only on weekdays)
+for d in WEEKDAYS:
+    # West Coast TV slot can only be filled if there's a West Coast team home game
+    west_games = gp.quicksum(x[i, j, d] for i in [7, 8] for j in TEAMS if j != i)
+    model.addConstr(
+        tv_west[d] <= west_games,
+        name=f'tv_west_available_{d}'
+    )
+    
+    # East Coast TV slot can only be filled if there's an East Coast team home game
+    east_games = gp.quicksum(x[i, j, d] for i in [1, 2, 3, 4, 5, 6] for j in TEAMS if j != i)
+    model.addConstr(
+        tv_east[d] <= east_games,
+        name=f'tv_east_available_{d}'
+    )
+
+# TV slot constraints (on weekends)
+for d in WEEKENDS:
+    # Weekend slots can be filled by any team's home game
+    any_game = gp.quicksum(x[i, j, d] for i in TEAMS for j in TEAMS if j != i)
+    for s in [1, 2]:
+        model.addConstr(
+            tv_weekend[d, s] <= any_game,
+            name=f'tv_weekend_available_{d}_{s}'
+        )
+
 # Each team plays at least 2 games per week
 # Removed to allow feasible solution with daily limits
 
@@ -139,7 +211,27 @@ for d in DAYS:
 model.optimize()
 
 if model.Status == GRB.OPTIMAL:
-    print(f"Total ticket revenue: ${int(model.ObjVal):,}")
+    # Calculate revenue breakdown
+    ticket_rev = sum(
+        ticket_values[i] * revenue_mult[d] * x[i, j, d].X
+        for i in TEAMS for j in TEAMS if i != j for d in DAYS
+    )
+    weekday_tv_rev = sum(
+        TV_SLOT_REVENUE * (tv_west[d].X + tv_east[d].X)
+        for d in WEEKDAYS
+    )
+    weekend_tv_rev = sum(
+        TV_SLOT_REVENUE * tv_weekend[d, s].X
+        for d in WEEKENDS for s in [1, 2]
+    )
+    tv_rev = weekday_tv_rev + weekend_tv_rev
+    total_rev = ticket_rev + tv_rev
+    
+    print(f"Total Revenue: ${int(total_rev):,}")
+    print(f"  Ticket Revenue: ${int(ticket_rev):,}")
+    print(f"  TV Slot Revenue: ${int(tv_rev):,}")
+    print(f"    (Weekday TV: ${int(weekday_tv_rev):,}, Weekend TV: ${int(weekend_tv_rev):,})")
+    print()
     
     # Compute games per team pair
     team_games = {i: {} for i in TEAMS}
@@ -147,21 +239,45 @@ if model.Status == GRB.OPTIMAL:
         for j in TEAMS:
             if i != j:
                 count = sum(x[i, j, d].X + x[j, i, d].X for d in DAYS)
-                team_games[i][f"Team {j}"] = int(count)
+                team_games[i][team_names[j]] = int(count)
     
     # Print the dict for each team
     for i in TEAMS:
-        print(f"Team {i}: {team_games[i]}")
+        print(f"{team_names[i]}: {team_games[i]}")
     
+    print()
     for d in DAYS:
         games_on_day = []
         for i in TEAMS:
             for j in TEAMS:
                 if i != j and x[i, j, d].X > 0.5:
-                    games_on_day.append(f"Team {i} vs Team {j} (home: {i})")
+                    games_on_day.append(f"{team_names[i]} vs {team_names[j]} (home: {team_names[i]})")
+        
+        tv_info = ""
+        if d in WEEKDAYS:
+            tv_slots = []
+            if tv_west[d].X > 0.5:
+                tv_slots.append("West TV")
+            if tv_east[d].X > 0.5:
+                tv_slots.append("East TV")
+            if tv_slots:
+                tv_info = f" [{', '.join(tv_slots)}]"
+        elif d in WEEKENDS:
+            tv_slots = []
+            if tv_weekend[d, 1].X > 0.5:
+                tv_slots.append("TV Slot 1")
+            if tv_weekend[d, 2].X > 0.5:
+                tv_slots.append("TV Slot 2")
+            if tv_slots:
+                tv_info = f" [{', '.join(tv_slots)}]"
+        
+        game_count = len(games_on_day)
+        game_label = "game" if game_count == 1 else "games"
+        day_label = f"WDay {d}" if d in WEEKENDS else f"Day {d}"
+        
         if games_on_day:
-            print(f"Day {d}: {', '.join(games_on_day)}")
+            print(f"{day_label} ({game_count} {game_label}): {', '.join(games_on_day)}{tv_info}")
         else:
-            print(f"Day {d}: No games")
+            print(f"{day_label} (0 games): No games{tv_info}")
 else:
     print("No optimal solution found")
