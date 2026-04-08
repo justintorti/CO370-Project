@@ -2,10 +2,27 @@ import gurobipy as gp
 from gurobipy import GRB
 
 # Simple sports schedule for 8 teams over 90 days
-# Maximize total number of games played (dummy objective, each game contributes 1)
+# Maximize ticket revenue based on home team ticket values
 
 TEAMS = [1, 2, 3, 4, 5, 6, 7, 8]
 DAYS = list(range(1, 91))
+
+# Ticket values (revenue per home game) for each team
+ticket_values = {1: 1000, 2: 1100, 3: 1050, 4: 1200, 5: 950, 6: 1150, 7: 1080, 8: 1020}
+
+# Team names and conferences
+team_names = {
+    1: "MTL", 2: "OTT", 3: "TOR", 4: "BOS",
+    5: "NY", 6: "MN", 7: "SEA", 8: "VAN"
+}
+
+team_conference = {
+    "MTL": "East", "OTT": "East", "TOR": "East", "BOS": "East",
+    "NY": "East", "MN": "East", "SEA": "West", "VAN": "West"
+}
+
+# Weekend multiplier (games on weekends generate more revenue)
+WEEKEND_MULTIPLIER = 1.5  # 50% more revenue on weekends
 
 # Define weeks (7 days each, last week 6 days)
 weeks = []
@@ -15,6 +32,7 @@ for start in range(1, 91, 7):
 
 model = gp.Model("simple_schedule")
 model.setParam('OutputFlag', 0)
+model.setParam('TimeLimit', 120)  # 120 second time limit
 
 # x[i,j,d] = 1 if team i hosts team j on day d
 x = model.addVars(
@@ -30,11 +48,17 @@ y = model.addVars(
     name='y'
 )
 
-# Objective: maximize total games (each game contributes 1)
-model.setObjective(
-    gp.quicksum(x[i, j, d] for i in TEAMS for j in TEAMS if i != j for d in DAYS),
-    GRB.MAXIMIZE
+# Objective: maximize ticket revenue with weekend multiplier
+# Pre-compute multipliers for efficiency
+revenue_mult = {}
+for d in DAYS:
+    revenue_mult[d] = WEEKEND_MULTIPLIER if (d % 7 == 6 or d % 7 == 0) else 1.0
+
+revenue_expr = gp.quicksum(
+    ticket_values[i] * revenue_mult[d] * x[i, j, d]
+    for i in TEAMS for j in TEAMS if i != j for d in DAYS
 )
+model.setObjective(revenue_expr, GRB.MAXIMIZE)
 
 # Constraints
 # Each team plays at most one game per day
@@ -95,7 +119,7 @@ for i in TEAMS:
 for d in DAYS:
     if d == 90:
         model.addConstr(
-            gp.quicksum(x[i, j, d] for i in TEAMS for j in TEAMS if i < j) == 4,
+            gp.quicksum(x[i, j, d] + x[j, i, d] for i in TEAMS for j in TEAMS if i < j) == 4,
             name=f'games_day_{d}'
         )
         model.addConstr(
@@ -104,7 +128,7 @@ for d in DAYS:
         )
     else:
         model.addConstr(
-            gp.quicksum(x[i, j, d] for i in TEAMS for j in TEAMS if i < j) <= 3,
+            gp.quicksum(x[i, j, d] + x[j, i, d] for i in TEAMS for j in TEAMS if i < j) <= 3,
             name=f'max_games_day_{d}'
         )
 
@@ -115,7 +139,7 @@ for d in DAYS:
 model.optimize()
 
 if model.Status == GRB.OPTIMAL:
-    print(f"Total games: {int(model.ObjVal)}")
+    print(f"Total ticket revenue: ${int(model.ObjVal):,}")
     
     # Compute games per team pair
     team_games = {i: {} for i in TEAMS}
