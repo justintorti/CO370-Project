@@ -53,7 +53,7 @@ for l1 in LOCATIONS:
             travel_cost[(l1, l2)] = int(round(distance * 500))
 
 # TV slot revenue
-TV_SLOT_REVENUE = 10_000  # $10,000 per filled TV slot
+TV_SLOT_REVENUE = 25_000  # $25,000 per filled TV slot
 
 # Create mapping from team number to conference
 team_by_number = {
@@ -335,6 +335,15 @@ for d in DAYS:
         model.addConstr(
             gp.quicksum(x[i, j, d] + x[j, i, d] for i in TEAMS for j in TEAMS if i < j) <= 3,
             name=f'max_games_day_{d}'
+        )
+
+# Each team plays at least 2 games per week
+for i in TEAMS:
+    for week_idx, week_days in enumerate(weeks):
+        games_in_week = gp.quicksum(y[i, d] for d in week_days)
+        model.addConstr(
+            games_in_week >= 2,
+            name=f'min_games_per_week_{i}_{week_idx}'
         )
 
 # TV slot constraints (only on weekdays)
