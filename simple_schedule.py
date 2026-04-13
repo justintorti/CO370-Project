@@ -14,7 +14,7 @@ LOCATIONS = TEAMS
 home_location = {i: i for i in TEAMS}
 
 # Ticket values (revenue per home game) for each team
-ticket_values = {1: 1000, 2: 1100, 3: 1050, 4: 1200, 5: 950, 6: 1150, 7: 1080, 8: 1020}
+ticket_values = {1: 863202, 2: 466804, 3: 673548, 4: 334732, 5: 188024, 6: 520715, 7: 916369, 8: 545760}
 
 # Team names and conferences
 team_names = {
@@ -30,27 +30,22 @@ team_conference = {
 # Weekend multiplier (games on weekends generate more revenue)
 WEEKEND_MULTIPLIER = 1.5  # 50% more revenue on weekends
 
-# Travel cost data for departure/arrival locations
-team_locations = {
-    1: (0, 0),
-    2: (1, 0),
-    3: (2, 0),
-    4: (3, 0),
-    5: (0, 1),
-    6: (1, 1),
-    7: (2, 1),
-    8: (3, 1)
+# Distance matrix (km) between cities
+# Teams: 1=MTL, 2=OTT, 3=TOR, 4=BOS, 5=NY, 6=MN, 7=SEA, 8=VAN
+distances = {
+    (1, 1): 0,    (1, 2): 199,  (1, 3): 553,  (1, 4): 480,  (1, 5): 611,  (1, 6): 1998, (1, 7): 4341, (1, 8): 4551,
+    (2, 1): 199,  (2, 2): 0,    (2, 3): 456,  (2, 4): 910,  (2, 5): 695,  (2, 6): 1390, (2, 7): 4071, (2, 8): 4282,
+    (3, 1): 553,  (3, 2): 456,  (3, 3): 0,    (3, 4): 887,  (3, 5): 739,  (3, 6): 1461, (3, 7): 4142, (3, 8): 4352,
+    (4, 1): 480,  (4, 2): 910,  (4, 3): 887,  (4, 4): 0,    (4, 5): 367,  (4, 6): 2227, (4, 7): 4908, (4, 8): 5124,
+    (5, 1): 611,  (5, 2): 695,  (5, 3): 739,  (5, 4): 367,  (5, 5): 0,    (5, 6): 1897, (5, 7): 4579, (5, 8): 4792,
+    (6, 1): 1998, (6, 2): 1390, (6, 3): 1461, (6, 4): 2227, (6, 5): 1897, (6, 6): 0,    (6, 7): 2684, (6, 8): 2899,
+    (7, 1): 4341, (7, 2): 4071, (7, 3): 4142, (7, 4): 4908, (7, 5): 4579, (7, 6): 2684, (7, 7): 0,    (7, 8): 229,
+    (8, 1): 4551, (8, 2): 4282, (8, 3): 4352, (8, 4): 5124, (8, 5): 4792, (8, 6): 2899, (8, 7): 229,  (8, 8): 0
 }
-travel_cost = {}
-for l1 in LOCATIONS:
-    for l2 in LOCATIONS:
-        if l1 == l2:
-            travel_cost[(l1, l2)] = 0
-        else:
-            dx = team_locations[l1][0] - team_locations[l2][0]
-            dy = team_locations[l1][1] - team_locations[l2][1]
-            distance = (dx * dx + dy * dy) ** 0.5
-            travel_cost[(l1, l2)] = int(round(distance * 500))
+
+# Travel cost = distance (km) * $10/km
+COST_PER_KM = 10
+travel_cost = {(l1, l2): distances[(l1, l2)] * COST_PER_KM for l1 in LOCATIONS for l2 in LOCATIONS}
 
 # TV slot revenue
 TV_SLOT_REVENUE = 25_000  # $25,000 per filled TV slot
