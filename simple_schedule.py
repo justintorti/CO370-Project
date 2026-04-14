@@ -343,40 +343,52 @@ for i in TEAMS:
 
 # TV slot constraints (only on weekdays)
 for d in WEEKDAYS:
-    # West Coast TV slot: must be filled if any game exists, can't be filled if no game
+    # West Coast TV slot indicator
     west_games = gp.quicksum(x[i, j, d] for i in [7, 8] for j in TEAMS if j != i)
+    
+    # Upper bound: W_d <= sum of west games
     model.addConstr(
-        tv_west[d] <= west_games,  # Can't fill slot if no game
-        name=f'tv_west_available_{d}'
-    )
-    model.addConstr(
-        2 * tv_west[d] >= west_games,  # Must fill slot if any game exists
-        name=f'tv_west_required_{d}'
+        tv_west[d] <= west_games,
+        name=f'tv_west_upper_{d}'
     )
     
-    # East Coast TV slot: must be filled if any game exists, can't be filled if no game
+    # Lower bound: each west game forces the slot to 1
+    for i in [7, 8]:
+        for j in TEAMS:
+            if j != i:
+                model.addConstr(
+                    x[i, j, d] <= tv_west[d],
+                    name=f'tv_west_lower_{i}_{j}_{d}'
+                )
+    
+    # East Coast TV slot indicator
     east_games = gp.quicksum(x[i, j, d] for i in [1, 2, 3, 4, 5, 6] for j in TEAMS if j != i)
+    
+    # Upper bound: E_d <= sum of east games
     model.addConstr(
-        tv_east[d] <= east_games,  # Can't fill slot if no game
-        name=f'tv_east_available_{d}'
+        tv_east[d] <= east_games,
+        name=f'tv_east_upper_{d}'
     )
-    model.addConstr(
-        6 * tv_east[d] >= east_games,  # Must fill slot if any game exists
-        name=f'tv_east_required_{d}'
-    )
+    
+    # Lower bound: each east game forces the slot to 1
+    for i in [1, 2, 3, 4, 5, 6]:
+        for j in TEAMS:
+            if j != i:
+                model.addConstr(
+                    x[i, j, d] <= tv_east[d],
+                    name=f'tv_east_lower_{i}_{j}_{d}'
+                )
 
 # TV slot constraints (on weekends)
 for d in WEEKENDS:
-    # Weekend slots can be filled by any team's home game
+    # Total games on this weekend day
     any_game = gp.quicksum(x[i, j, d] for i in TEAMS for j in TEAMS if j != i)
-    for s in [1, 2]:
-        model.addConstr(
-            tv_weekend[d, s] <= any_game,
-            name=f'tv_weekend_available_{d}_{s}'
-        )
-
-# Each team plays at least 2 games per week
-# Removed to allow feasible solution with daily limits
+    
+    # Upper bound: total weekend slots cannot exceed number of games
+    model.addConstr(
+        tv_weekend[d, 1] + tv_weekend[d, 2] <= any_game,
+        name=f'tv_weekend_total_{d}'
+    )
 
 # Solve and print results
 model.optimize(best_solution_callback)
