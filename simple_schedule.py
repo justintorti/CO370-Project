@@ -1,6 +1,10 @@
 import os
 os.environ['GRB_LICENSE_FILE'] = "/Users/zachcohen/Desktop/CO370 files/gurobi.lic"
 
+import csv
+import webbrowser
+from html import escape
+
 import gurobipy as gp
 from gurobipy import GRB
 
@@ -207,6 +211,49 @@ def best_solution_callback(cb_model, where):
                 print_callback_solution(cb_model)
             else:
                 print("\n--- No feasible incumbent available at 30 seconds ---")
+
+
+def write_schedule_csv(filename, schedule):
+    with open(filename, 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(['Day', 'DayType', 'Games', 'TV'])
+        for d in sorted(schedule):
+            row = schedule[d]
+            writer.writerow([
+                d,
+                'Weekend' if d in WEEKENDS else 'Weekday',
+                '; '.join(row['games']) if row['games'] else 'No games',
+                row['tv'] or ''
+            ])
+
+
+def write_schedule_html(filename, schedule, weeks):
+    with open(filename, 'w') as f:
+        f.write('<!DOCTYPE html>\n<html lang="en">\n<head>\n')
+        f.write('<meta charset="UTF-8">\n<title>Schedule Calendar</title>\n')
+        f.write('<style>body{font-family:Arial,sans-serif;}table{border-collapse:collapse;width:100%;}th,td{border:1px solid #999;padding:8px;vertical-align:top;}th{background:#004080;color:#fff;}td.weekend{background:#f7f7f7;}td.empty{background:#eee;}</style>\n')
+        f.write('</head>\n<body>\n')
+        f.write('<h1>Schedule Calendar</h1>\n')
+        f.write('<table>\n<thead><tr><th>Week</th>')
+        f.write(''.join(f'<th>Day {day}</th>' for day in range(1, 8)))
+        f.write('</tr></thead>\n<tbody>\n')
+
+        for week_idx, week_days in enumerate(weeks, start=1):
+            f.write(f'<tr><th>Week {week_idx}</th>')
+            for d in week_days:
+                cell = schedule.get(d, {'games': [], 'tv': ''})
+                classes = ['weekend'] if d in WEEKENDS else []
+                cell_html = ''
+                if cell['games']:
+                    cell_html += '<br>'.join(escape(item) for item in cell['games'])
+                else:
+                    cell_html += '<em>No games</em>'
+                if cell['tv']:
+                    cell_html += f'<div><strong>{escape(cell["tv"])}</strong></div>'
+                f.write(f'<td class="{" ".join(classes)}"><div><strong>Day {d}</strong></div>{cell_html}</td>')
+            f.write('</tr>\n')
+
+        f.write('</tbody>\n</table>\n</body>\n</html>\n')
 
 # Constraints
 # Each team plays at most one game per day
@@ -438,13 +485,14 @@ if model.Status == GRB.OPTIMAL or (model.Status == GRB.TIME_LIMIT and model.SolC
         print(f"{team_names[i]}: {team_games[i]}")
     
     print()
+    schedule = {}
     for d in DAYS:
         games_on_day = []
         for i in TEAMS:
             for j in TEAMS:
                 if i != j and x[i, j, d].X > 0.5:
                     games_on_day.append(f"{team_names[i]} vs {team_names[j]} (home: {team_names[i]})")
-        
+
         tv_info = ""
         if d in WEEKDAYS:
             tv_slots = []
@@ -453,7 +501,7 @@ if model.Status == GRB.OPTIMAL or (model.Status == GRB.TIME_LIMIT and model.SolC
             if tv_east[d].X > 0.5:
                 tv_slots.append("East TV")
             if tv_slots:
-                tv_info = f" [{', '.join(tv_slots)}]"
+                tv_info = f"{', '.join(tv_slots)}"
         elif d in WEEKENDS:
             tv_slots = []
             if tv_weekend[d, 1].X > 0.5:
@@ -461,15 +509,25 @@ if model.Status == GRB.OPTIMAL or (model.Status == GRB.TIME_LIMIT and model.SolC
             if tv_weekend[d, 2].X > 0.5:
                 tv_slots.append("TV Slot 2")
             if tv_slots:
-                tv_info = f" [{', '.join(tv_slots)}]"
-        
+                tv_info = f"{', '.join(tv_slots)}"
+
         game_count = len(games_on_day)
         game_label = "game" if game_count == 1 else "games"
         day_label = f"WDay {d}" if d in WEEKENDS else f"Day {d}"
-        
+
+        schedule[d] = {
+            'games': games_on_day,
+            'tv': tv_info,
+        }
+
         if games_on_day:
-            print(f"{day_label} ({game_count} {game_label}): {', '.join(games_on_day)}{tv_info}")
+            print(f"{day_label} ({game_count} {game_label}): {', '.join(games_on_day)}" + (f" [{tv_info}]" if tv_info else ""))
         else:
-            print(f"{day_label} (0 games): No games{tv_info}")
+            print(f"{day_label} (0 games): No games" + (f" [{tv_info}]" if tv_info else ""))
+
+    write_schedule_csv('schedule.csv', schedule)
+    write_schedule_html('schedule.html', schedule, weeks)
+    print('\nSaved presentable schedule to schedule.csv and schedule.html')
+    webbrowser.open('schedule.html')
 else:
     print("No optimal solution found")

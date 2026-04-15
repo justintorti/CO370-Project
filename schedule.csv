@@ -1,0 +1,91 @@
+Day,DayType,Games,TV
+1,Weekday,MTL vs OTT (home: MTL); NY vs VAN (home: NY),East TV
+2,Weekday,TOR vs MN (home: TOR),East TV
+3,Weekday,OTT vs MTL (home: OTT); BOS vs VAN (home: BOS),East TV
+4,Weekday,SEA vs NY (home: SEA),West TV
+5,Weekday,OTT vs BOS (home: OTT); TOR vs VAN (home: TOR),East TV
+6,Weekend,No games,
+7,Weekend,NY vs TOR (home: NY); SEA vs MN (home: SEA),"TV Slot 1, TV Slot 2"
+8,Weekday,VAN vs BOS (home: VAN),West TV
+9,Weekday,MN vs OTT (home: MN),East TV
+10,Weekday,MTL vs VAN (home: MTL); TOR vs SEA (home: TOR),East TV
+11,Weekday,No games,
+12,Weekday,TOR vs MTL (home: TOR); NY vs SEA (home: NY),East TV
+13,Weekend,BOS vs VAN (home: BOS),TV Slot 2
+14,Weekend,MN vs NY (home: MN); SEA vs OTT (home: SEA),"TV Slot 1, TV Slot 2"
+15,Weekday,MTL vs VAN (home: MTL),East TV
+16,Weekday,OTT vs NY (home: OTT),East TV
+17,Weekday,No games,
+18,Weekday,BOS vs TOR (home: BOS); NY vs OTT (home: NY); MN vs SEA (home: MN),East TV
+19,Weekday,VAN vs MTL (home: VAN),West TV
+20,Weekend,TOR vs MN (home: TOR); BOS vs SEA (home: BOS),"TV Slot 1, TV Slot 2"
+21,Weekend,No games,
+22,Weekday,MTL vs MN (home: MTL); NY vs OTT (home: NY); SEA vs VAN (home: SEA),"West TV, East TV"
+23,Weekday,No games,
+24,Weekday,BOS vs TOR (home: BOS),East TV
+25,Weekday,OTT vs MN (home: OTT); VAN vs MTL (home: VAN),"West TV, East TV"
+26,Weekday,BOS vs TOR (home: BOS),East TV
+27,Weekend,SEA vs NY (home: SEA),TV Slot 2
+28,Weekend,No games,
+29,Weekday,VAN vs OTT (home: VAN),West TV
+30,Weekday,MN vs NY (home: MN),East TV
+31,Weekday,SEA vs MTL (home: SEA); VAN vs BOS (home: VAN),West TV
+32,Weekday,TOR vs NY (home: TOR),East TV
+33,Weekday,BOS vs OTT (home: BOS); MN vs SEA (home: MN),East TV
+34,Weekend,MTL vs TOR (home: MTL),TV Slot 2
+35,Weekend,No games,
+36,Weekday,MTL vs VAN (home: MTL); TOR vs BOS (home: TOR); NY vs OTT (home: NY),East TV
+37,Weekday,No games,
+38,Weekday,OTT vs SEA (home: OTT); MN vs MTL (home: MN),East TV
+39,Weekday,NY vs BOS (home: NY),East TV
+40,Weekday,OTT vs SEA (home: OTT),East TV
+41,Weekend,TOR vs VAN (home: TOR); MN vs MTL (home: MN),"TV Slot 1, TV Slot 2"
+42,Weekend,No games,
+43,Weekday,MTL vs MN (home: MTL); NY vs BOS (home: NY); VAN vs TOR (home: VAN),"West TV, East TV"
+44,Weekday,SEA vs OTT (home: SEA),West TV
+45,Weekday,NY vs MTL (home: NY); MN vs TOR (home: MN),East TV
+46,Weekday,OTT vs SEA (home: OTT),East TV
+47,Weekday,BOS vs MN (home: BOS),East TV
+48,Weekend,TOR vs MTL (home: TOR),TV Slot 2
+49,Weekend,MN vs VAN (home: MN),TV Slot 2
+50,Weekday,MTL vs OTT (home: MTL),East TV
+51,Weekday,VAN vs NY (home: VAN),West TV
+52,Weekday,SEA vs TOR (home: SEA),West TV
+53,Weekday,NY vs MN (home: NY),East TV
+54,Weekday,BOS vs MTL (home: BOS); VAN vs SEA (home: VAN),"West TV, East TV"
+55,Weekend,OTT vs TOR (home: OTT),TV Slot 2
+56,Weekend,MTL vs SEA (home: MTL); BOS vs MN (home: BOS),"TV Slot 1, TV Slot 2"
+57,Weekday,OTT vs VAN (home: OTT),East TV
+58,Weekday,MTL vs NY (home: MTL); MN vs TOR (home: MN); SEA vs BOS (home: SEA),"West TV, East TV"
+59,Weekday,No games,
+60,Weekday,OTT vs MTL (home: OTT); SEA vs BOS (home: SEA),"West TV, East TV"
+61,Weekday,TOR vs NY (home: TOR); VAN vs MN (home: VAN),"West TV, East TV"
+62,Weekend,MTL vs SEA (home: MTL),TV Slot 2
+63,Weekend,TOR vs NY (home: TOR); BOS vs MN (home: BOS),"TV Slot 1, TV Slot 2"
+64,Weekday,No games,
+65,Weekday,NY vs MN (home: NY); VAN vs SEA (home: VAN),"West TV, East TV"
+66,Weekday,OTT vs BOS (home: OTT),East TV
+67,Weekday,TOR vs VAN (home: TOR); NY vs MTL (home: NY),East TV
+68,Weekday,SEA vs MN (home: SEA),West TV
+69,Weekend,MTL vs TOR (home: MTL); NY vs BOS (home: NY); VAN vs OTT (home: VAN),"TV Slot 1, TV Slot 2"
+70,Weekend,No games,
+71,Weekday,MN vs BOS (home: MN),East TV
+72,Weekday,OTT vs VAN (home: OTT),East TV
+73,Weekday,BOS vs SEA (home: BOS); NY vs TOR (home: NY),East TV
+74,Weekday,OTT vs MN (home: OTT),East TV
+75,Weekday,BOS vs MTL (home: BOS),East TV
+76,Weekend,OTT vs TOR (home: OTT); MN vs NY (home: MN); SEA vs VAN (home: SEA),"TV Slot 1, TV Slot 2"
+77,Weekend,MTL vs BOS (home: MTL),TV Slot 2
+78,Weekday,MN vs OTT (home: MN); SEA vs TOR (home: SEA); VAN vs NY (home: VAN),"West TV, East TV"
+79,Weekday,BOS vs MTL (home: BOS),East TV
+80,Weekday,TOR vs OTT (home: TOR); SEA vs NY (home: SEA),"West TV, East TV"
+81,Weekday,No games,
+82,Weekday,MTL vs SEA (home: MTL); VAN vs BOS (home: VAN),"West TV, East TV"
+83,Weekend,MN vs TOR (home: MN),TV Slot 2
+84,Weekend,BOS vs OTT (home: BOS),TV Slot 2
+85,Weekday,VAN vs NY (home: VAN),West TV
+86,Weekday,OTT vs MTL (home: OTT),East TV
+87,Weekday,TOR vs SEA (home: TOR),East TV
+88,Weekday,NY vs BOS (home: NY); MN vs VAN (home: MN),East TV
+89,Weekday,No games,
+90,Weekend,MTL vs NY (home: MTL); TOR vs OTT (home: TOR); SEA vs BOS (home: SEA); VAN vs MN (home: VAN),"TV Slot 1, TV Slot 2"
