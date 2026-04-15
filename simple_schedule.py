@@ -75,7 +75,7 @@ for start in range(1, 91, 7):
 
 model = gp.Model("simple_schedule")
 model.setParam('OutputFlag', 1)
-model.setParam('TimeLimit', 300)  # 300 second time limit
+model.setParam('TimeLimit', 1200)  # 300 second time limit
 model.setParam('MIPFocus', 1)  # Focus on finding feasible solutions quickly
 model.setParam('Heuristics', 0.5)  # Increase heuristic effort (0-1)
 model.setParam('Cuts', 1)  # Reduce cut generation to speed up
